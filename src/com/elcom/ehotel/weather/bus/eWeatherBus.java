@@ -10,6 +10,7 @@ public interface eWeatherBus {
 
 	List<ObjCountry> getCountries();
 
-	String asyncWeather(String countryidin, String sdayin, String tempin, String tempmaxin, String tempminin,
-			String descriptionin, String imageurlin, String weatherdatein, String urllocalin, String humidity, String windSpeed);
+	String insertWeather(String countryidin, String sdayin, String tempin, String tempmaxin, String tempminin,
+			String descriptionin, String imageurlin, String weatherdatein, String urllocalin, String humidity,
+			String windSpeed);
 }

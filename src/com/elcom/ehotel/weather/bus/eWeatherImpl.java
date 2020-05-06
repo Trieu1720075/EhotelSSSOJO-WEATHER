@@ -22,11 +22,20 @@ public class eWeatherImpl implements eWeatherBus {
 		return lst;
 	}
 
+//	@Override
+//	public String asyncWeather(String countryidin, String sdayin, String tempin, String tempmaxin, String tempminin,
+//			String descriptionin, String imageurlin, String weatherdatein, String urllocalin, String humidity, String windSpeed) {
+//		// TODO Auto-generated method stub
+//		int rs = eWeather.asynDataWeather(countryidin, sdayin, tempin, tempmaxin, tempminin, descriptionin, imageurlin,
+//				weatherdatein, urllocalin, humidity, windSpeed);
+//		return rs + "";
+//	}
+	
 	@Override
-	public String asyncWeather(String countryidin, String sdayin, String tempin, String tempmaxin, String tempminin,
+	public String insertWeather(String countryidin, String sdayin, String tempin, String tempmaxin, String tempminin,
 			String descriptionin, String imageurlin, String weatherdatein, String urllocalin, String humidity, String windSpeed) {
 		// TODO Auto-generated method stub
-		int rs = eWeather.asynDataWeather(countryidin, sdayin, tempin, tempmaxin, tempminin, descriptionin, imageurlin,
+		String rs = eWeather.insertWeather(countryidin, sdayin, tempin, tempmaxin, tempminin, descriptionin, imageurlin,
 				weatherdatein, urllocalin, humidity, windSpeed);
 		return rs + "";
 	}

@@ -70,15 +70,14 @@ public class eWeatherDao {
 		}
 		return rs;
 	}
-
+	
 	@SuppressWarnings("unchecked")
-	public int asynDataWeather(String countryidin, String sdayin, String tempin, String tempmaxin, String tempminin,
+	public String insertWeather(String countryidin, String sdayin, String tempin, String tempmaxin, String tempminin,
 			String descriptionin, String imageurlin, String weatherdatein, String urllocalin, String humidity, String windSpeed) {
-		int rs = 0;
+		String rs = "-1";
 		Vector<SubProParam> params = new Vector<SubProParam>();
 
-		SubProParam param = null;
-		param = new SubProParam(new String(countryidin), SubProParam.IN);
+		SubProParam param = new SubProParam(new String(countryidin), SubProParam.IN);
 		params.add(param);
 		param = new SubProParam(new String(sdayin), SubProParam.IN);
 		params.add(param);
@@ -101,24 +100,19 @@ public class eWeatherDao {
 		param = new SubProParam(new String(windSpeed), SubProParam.IN);
 		params.add(param);
 
-		Vector<String> outParam = new Vector<String>();
-		SubProParam subOut = new SubProParam(outParam, "STRING_ARR", 1);
+		String outParam = new String();
+		SubProParam subOut = new SubProParam(outParam, 1);
 		params.add(subOut);
 		try {
-			params = SQL.broker.executeSubPro(SQL.ASYN_WEATHER, params);
+			params = SQL.broker.executeSubPro(SQL.INSERT_WEATHER, params);
 			if ((params != null) & (params.size() > 0)) {
-				subOut = (SubProParam) params.get(9);
-				outParam = subOut.getVector();
+				SubProParam paramOut = (SubProParam) params.get(params.size() - 1);
+				rs = paramOut.getString().trim();
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		if (outParam.size() > 0) {
-			LogUtil.logDao(eWeatherDao.class.toString(), SQL.ASYN_WEATHER, params, "none", outParam.size() / 1);
-			for (int i = 0; i < outParam.size(); i = i + 1) {
-				rs = Integer.parseInt(outParam.get(i));
-			}
-		}
+		
 		return rs;
 	}
 

@@ -11,13 +11,13 @@ public class Data {
 	
 	String latitude,longitude,timezone;
 	DailyForecast daily;
-	CurrentlyForecast currently;
+	WeatherData currently;
 	
-	public CurrentlyForecast getCurrently() {
+	public WeatherData getCurrently() {
 		return currently;
 	}
 	
-	public void setCurrently(CurrentlyForecast currently) {
+	public void setCurrently(WeatherData currently) {
 		this.currently = currently;
 	}
 	

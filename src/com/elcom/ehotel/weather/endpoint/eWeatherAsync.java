@@ -22,7 +22,6 @@ import java.util.TimeZone;
 import org.json.JSONArray;
 
 import com.elcom.ehotel.weather.bus.eWeatherImpl;
-import com.elcom.ehotel.weather.object.CurrentlyForecast;
 import com.elcom.ehotel.weather.object.DailyForecast;
 import com.elcom.ehotel.weather.object.Data;
 import com.elcom.ehotel.weather.object.LoginReponse;
@@ -50,13 +49,11 @@ public class eWeatherAsync {
 
 	public static void main(String[] args) {
 		Config config = new Config();
-		eWeatherImpl daily = new eWeatherImpl();
 		eWeatherImpl current = new eWeatherImpl();
-
+		WeatherDB lstCurentWeather = null;
 		List<WeatherDB> lstDailyWeather = new ArrayList<>();
-		List<WeatherDB> lstCurentWeather = new ArrayList<>();
 		// System.out.println(login.getApiKey());
-		List<ObjCountry> countries = daily.getCountries();
+		List<ObjCountry> countries = current.getCountries();
 		System.out.println("---------------------------------------Start async data----------------------------------");
 		// for (int i = 0; i < stations.size(); i++) {
 		// System.out.println(stations.get(i).getProvince_name());
@@ -66,7 +63,7 @@ public class eWeatherAsync {
 			// System.out.println(countries.get(i).getWeathercode());
 			try {
 				List<WeatherData> dataDaily = getDataDailyWeather(config.getKey(), countries.get(i).getWeathercode());
-				CurrentlyForecast dataCurrent = getDataCurrentWeather(config.getKey(), countries.get(i).getWeathercode());
+				WeatherData dataCurrent = getDataCurrentWeather(config.getKey(), countries.get(i).getWeathercode());
 				// System.out.println(data.getReturnDataSet().getData().get(0).getSens_aver_0_110005000());
 				lstDailyWeather = processDailyData(dataDaily, countries.get(i).getId());
 				lstCurentWeather = processCurrentlyData(dataCurrent, countries.get(i).getId());
@@ -76,22 +73,28 @@ public class eWeatherAsync {
 			}
 		}
 
-		if (lstCurentWeather.size() > 0) {
+		if (lstDailyWeather.size() > 0) {
 			System.out.println(
-					"---------------------------------------Delete Daily old data----------------------------------");
-			daily.deleteOldData();
-			for (int i = 0; i < lstCurentWeather.size(); i++) {
-				WeatherDB dailyItem = lstCurentWeather.get(i);
+					"---------------------------------------Delete old data----------------------------------");
+			current.deleteOldData();
+			for (int i = 0; i < Integer.parseInt(config.getDaynum()); i++) {
+				WeatherDB dailyItem = lstDailyWeather.get(i);
+				if (dailyItem.getSday() == lstCurentWeather.getSday()) {
+					dailyItem.setHumidity(lstCurentWeather.getHumidity());
+					dailyItem.setTemp(lstCurentWeather.getTemp());
+					dailyItem.setWindSpeed(lstCurentWeather.getWindSpeed());
+					dailyItem.setImage(lstCurentWeather.getImage());
+				}
 				System.out.println(dailyItem.toString());
 				try {
 					String des_file = dailyItem.getImage();
 					// save image to local
-					saveImage(String.format(imagePath, dailyItem.getImage()), config.getPath() + "/" + des_file);
+					//saveImage(String.format(imagePath, dailyItem.getImage()), config.getPath() + "/" + des_file);
 				} catch (Exception e) {
 					// TODO: handle exception
 					e.printStackTrace();
 				}
-				daily.asyncWeather(dailyItem.getCountryID(), dailyItem.getSday(), dailyItem.getTemp(), dailyItem.getTempmax(),
+				current.insertWeather(dailyItem.getCountryID(), dailyItem.getSday(), dailyItem.getTemp(), dailyItem.getTempmax(),
 						dailyItem.getTempmin(), dailyItem.getDescription(), dailyItem.getImage(), dailyItem.getWeatherdate(),
 						dailyItem.getImagelocation(), dailyItem.getWindSpeed(), dailyItem.getHumidity());
 			}
@@ -101,7 +104,8 @@ public class eWeatherAsync {
 			System.out.println(
 					"---------------------------------------Async data done----------------------------------");
 
-		}else {
+		}
+		else {
 			System.out
 					.println("---------------------------------------No data found----------------------------------");
 
@@ -289,7 +293,7 @@ public class eWeatherAsync {
 		return rs;
 	}
 	
-	static CurrentlyForecast getDataCurrentWeather(String token, String stationcode) {
+	static WeatherData getDataCurrentWeather(String token, String stationcode) {
 
 		String request = String.format(baseUrl, token, stationcode);
 		String response = getRequest(request);
@@ -302,7 +306,7 @@ public class eWeatherAsync {
 		JsonObject object = (JsonObject) parser.parse(response);
 		Data emp = gson.fromJson(object, Data.class);
 
-		CurrentlyForecast rs = emp.getCurrently();
+		WeatherData rs = emp.getCurrently();
 
 		return rs;
 	}
@@ -362,28 +366,25 @@ public class eWeatherAsync {
 		return listWeatherDB;
 	}
 	
-	static List<WeatherDB> processCurrentlyData(CurrentlyForecast datas, String countryID) {
-//			if (compareTime(getCurrentTime(), time) <= 0) {
-				WeatherDB db = new WeatherDB();
-				db.setCountryID(countryID);
-				db.setHumidity(datas.getHumidity());
-				db.setTemp(datas.getTemperature());
-				db.setWindSpeed(datas.getWindSpeed());
-//				db.setDescription(data.getSummary());
-//				db.setImage(getImage(data));
-//				db.setImagelocation(getImage(data));
-//				System.out.println(time);
-//				db.setSday(convertToDayOfWeek(time));
-//				db.setTemp(data.getTemperatureHigh());
-//				db.setTempmax(data.getTemperatureMax());
-//				db.setTempmin(data.getTemperatureMin());
-//				db.setWeatherdate(getStringDate(time));
-//				db.setHumidity(data.getHumidity());
-//				db.setWindSpeed(data.getWindSpeed());
-				listWeatherDB.add(db);
-//			}
+	static WeatherDB processCurrentlyData(WeatherData data, String countryID) {
+				List<WeatherDB> listCurrentWeatherDB = new ArrayList<>();
+				String time = convertToTime(data.getTime());
+					WeatherDB db = new WeatherDB();
+					db.setCountryID(countryID);
+					db.setDescription(data.getSummary());
+					db.setImage(getImage(data));
+					db.setImagelocation(getImage(data));
+					System.out.println(time);
+					db.setSday(convertToDayOfWeek(time));
+					db.setTemp(data.getTemperature());
+					db.setTempmax(data.getTemperature());
+					db.setTempmin(data.getTemperature());
+					db.setWeatherdate(getStringDate(time));
+					db.setHumidity(data.getHumidity());
+					db.setWindSpeed(data.getWindSpeed());
+					
 		
-		return listWeatherDB;
+		return db;
 	}
 
 	public static String convertToTime(String milisecon) {
